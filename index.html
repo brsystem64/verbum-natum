@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<style>
+    :root {
+        --sun-width: 100px;
+        --moon-width: 80px;
+        --light-day-color: #ff7b00;
+        --dark-day-color: #f89941;
+        --dark-night-color: #0d1b2a;
+        --light-night-color: #1f3f62;
+    }
+
+    * {
+        margin: 0px;
+        padding: 0px;
+        box-sizing: border-box;
+    }
+
+
+    div.sky {
+        position: fixed;
+        width: 100vw;
+        height: 100vh;
+        transition: background 1s linear;
+    }
+
+    div.sun {
+        display: none;
+        position: absolute;
+        background-color: #ffdebf;
+        box-shadow: #ffcb9a 0 0 20px 25px;
+        width: var(--sun-width);
+        height: var(--sun-width);
+        border-radius: 50%;
+        transition: all 1s ease-in-out;
+    }
+
+    div.moon {
+        position: absolute;
+        background-color: #ffdebf;
+        box-shadow: #ffcb9a 0 0 15px 2px;
+        width: var(--sun-width);
+        height: var(--sun-width);
+        border-radius: 50%;
+        transition: all 1s ease-in-out;
+    }
+
+    div.star {
+        position: absolute;
+        width: 5px;
+        height: 5px;
+        transform: rotate(45deg);
+        background-color: white;
+        box-shadow: 0 0 8px 3px white;
+        top: 25%;
+        left: 75%;
+    }
+
+    div.earth {
+        position: absolute;
+        display: flex;
+        flex-direction: column;
+        width: 100vw;
+        height: 12vh;
+        bottom: 0px;
+        background-color: transparent;
+    }
+
+    div.person {
+        display: flex;
+        background-color: transparent;
+    }
+
+    div.person>.camel {
+        position: relative;
+        width: 86px;
+        height: 86px;
+        background: url("./camelo.gif") 0px 0px;
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: 0px 29px;
+        transform: scaleX(-1);
+        /* ← Isso inverte horizontalmente */
+
+    }
+
+    div.sand {
+        background-color: black;
+        height: 100%;
+    }
+
+    div.message {
+        margin-top: 50vh;
+        margin-left: 60px;
+        color: white;
+        font-size: 73px;
+        font-weight: bold;
+        opacity: 0;
+        transform: translateY(20px);
+        animation: aparecerSuave 5s ease-out forwards;
+    }
+
+    @keyframes aparecerSuave {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<body>
+    <div class="sky" id="sky">
+        <div class="sun" id="sun"></div>
+        <div class="moon" id="moon"></div>
+        <div class="star" id="star"></div>
+        <div class="message">
+            <label id="text">Faltam 2 dias...</label>
+        </div>
+
+    </div>
+
+    <div class="earth">
+        <div class="person">
+            <div class="camel"></div>
+            <div class="camel"></div>
+            <div class="camel"></div>
+        </div>
+        <div class="sand"></div>
+    </div>
+
+    <script>
+        const sun = document.getElementById("sun");
+        const moon = document.getElementById("moon");
+        const text = document.getElementById("text");
+
+        const morning = 6;
+        const evening = 18;
+
+        function currentTime() {
+            const now = new Date();
+            return now.getHours() * 60 + now.getMinutes();
+        }
+
+        function moveInTraject(star, max, min, time) {
+            if (time > max || time < min - 30) {
+                star.style.display = 'none';
+                return;
+            } else {
+                var porcent = getPorcent(min, max, time)
+                star.style.left = `${porcent}%`;
+                star.style.display = 'block';
+            }
+        }
+
+        function moveMoon() {
+            var time = currentTime();
+            var min = evening * 60;
+            var max = (evening * 60) + (morning * 60);
+            moveInTraject(moon, max, min, time)
+        }
+        function moveSun() {
+            var time = currentTime();
+            var min = morning * 60;
+            var max = evening * 60;
+            moveInTraject(sun, max, min, time)
+        }
+        function getPorcent(min, max, value) {
+            return ((value - min) / (max - min)) * 100;
+        }
+
+        function updateSky() {
+            const now = new Date();
+            const minutes = now.getHours() * 60 + now.getMinutes();
+            const progress = minutes / 1440;
+
+            const sky = document.getElementById("sky");
+
+            // dark night
+            if (progress < .20 || progress > .77) {
+                sky.style.background = `linear-gradient(to bottom, var(--dark-night-color), var(--dark-night-color))`;
+            }
+            // light night (morning)
+            else if (progress > .20 && progress < .25) {
+                sky.style.background = `linear-gradient(to bottom, var(--dark-night-color), var(--light-night-color))`;
+            }
+            //light day (morning)
+            else if (progress >= .25 && progress < .27) {
+                sky.style.background = `linear-gradient(to bottom, var(--light-day-color), var(--dark-night-color))`;
+            }
+            // dark day (morning / afternon)
+            else if (progress >= .27 && progress < .75) {
+                sky.style.background = `linear-gradient(to bottom, var(--light-day-color), var(--dark-day-color))`;
+            }
+            // light night (evenning)
+            else if (progress >= .75 && progress < .77) {
+                sky.style.background = `linear-gradient(to bottom, var(--light-night-color), var(--dark-day-color))`;
+            }
+        }
+
+
+        function updateMessage() {
+            const now = new Date();
+            const natal = new Date(now.getFullYear(), 11, 25);
+
+            // Se já passou o Natal deste ano, calcula para o próximo ano
+            if (now > natal) {
+                natal.setFullYear(now.getFullYear() + 1);
+            }
+
+            // Calcula a diferença em milissegundos
+            const diffMs = natal - now;
+            // Converte para dias, arredondando para baixo
+            const diffDias = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+
+            if (diffDias == 1) {
+                text.innerHTML = `Volte amanhã...`;
+            } else {
+                text.innerHTML = `Faltam ${diffDias} dias...`;
+            }
+
+
+        }
+
+        updateSky();
+        updateMessage();
+        setInterval(updateMessage, 1000)
+        setInterval(moveSun, 1000);
+        setInterval(moveMoon, 1000);
+        setInterval(updateSky, 1000);
+
+    </script>
+
+
+</body>
+
+</html>
